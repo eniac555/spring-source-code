@@ -2,6 +2,8 @@ package com.source.a02;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletRegistrationBean;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext;
@@ -11,8 +13,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.context.support.FileSystemXmlApplicationContext;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /*
     常见 ApplicationContext 实现
@@ -22,11 +29,12 @@ public class A02 {
 
     public static void main(String[] args) {
         testClassPathXmlApplicationContext();
-//        testFileSystemXmlApplicationContext();
-//        testAnnotationConfigApplicationContext();
-//        testAnnotationConfigServletWebServerApplicationContext();
+        //testFileSystemXmlApplicationContext();
+        //testAnnotationConfigApplicationContext();
+        //testAnnotationConfigServletWebServerApplicationContext();
 
-        /*DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
         System.out.println("读取之前...");
         for (String name : beanFactory.getBeanDefinitionNames()) {
             System.out.println(name);
@@ -36,7 +44,8 @@ public class A02 {
         reader.loadBeanDefinitions(new FileSystemResource("src\\main\\resources\\a02.xml"));
         for (String name : beanFactory.getBeanDefinitionNames()) {
             System.out.println(name);
-        }*/
+        }
+
 
         /*
             学到了什么
@@ -84,6 +93,7 @@ public class A02 {
         System.out.println(context.getBean(Bean2.class).getBean1());
     }
 
+
     // ⬇️较为经典的容器, 基于 java 配置类来创建, 用于 web 环境
     private static void testAnnotationConfigServletWebServerApplicationContext() {
         AnnotationConfigServletWebServerApplicationContext context =
@@ -93,8 +103,12 @@ public class A02 {
         }
     }
 
+
+    //测试第四种方法的类
+    //也是一个内嵌Tomcat如何工作的简单demo
     @Configuration
     static class WebConfig {
+        //Tomcat内嵌容器
         @Bean
         public ServletWebServerFactory servletWebServerFactory() {
             return new TomcatServletWebServerFactory();
@@ -105,9 +119,11 @@ public class A02 {
             return new DispatcherServlet();
         }
 
+        //把DispatcherServlet注册到Tomcat里面去
         @Bean
         public DispatcherServletRegistrationBean registrationBean(DispatcherServlet dispatcherServlet) {
             return new DispatcherServletRegistrationBean(dispatcherServlet, "/");
+            // "/"：通配符，先由DispatcherServlet来处理，再分发请求到控制器
         }
 
         @Bean("/hello")
@@ -119,6 +135,8 @@ public class A02 {
         }
     }
 
+
+    //测试第三种方法的配置类
     @Configuration
     static class Config {
         @Bean
@@ -134,6 +152,8 @@ public class A02 {
         }
     }
 
+
+    //测试第一、二种方法的类
     static class Bean1 {
     }
 
