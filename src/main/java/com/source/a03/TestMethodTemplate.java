@@ -9,7 +9,7 @@ public class TestMethodTemplate {
     public static void main(String[] args) {
         MyBeanFactory beanFactory = new MyBeanFactory();
         beanFactory.addBeanPostProcessor(bean -> System.out.println("解析 @Autowired"));
-
+        //匿名内部类格式
         beanFactory.addBeanPostProcessor(new BeanPostProcessor() {
             @Override
             public void inject(Object bean) {
@@ -25,6 +25,7 @@ public class TestMethodTemplate {
 
     // 模板方法  Template Method Pattern
     static class MyBeanFactory {
+
         public Object getBean() {
             Object bean = new Object();
             System.out.println("构造 " + bean);
@@ -36,7 +37,7 @@ public class TestMethodTemplate {
             return bean;
         }
 
-        private List<BeanPostProcessor> processors = new ArrayList<>();
+        private final List<BeanPostProcessor> processors = new ArrayList<>();
 
         public void addBeanPostProcessor(BeanPostProcessor processor) {
             processors.add(processor);
