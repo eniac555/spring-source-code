@@ -16,6 +16,10 @@ public class A08_1 {
 
     public static void main(String[] args) {
         //验证在单例bean上注入不同scope的bean时，新注入的bean的scope会失效，并提出四种解决办法
+
+        //解决方法虽然不同，但理念上殊途同归，都是延迟其他scope的bean的获取
+        //即运行时才会获取其他scope类型的bean
+
         AnnotationConfigApplicationContext context =
                 new AnnotationConfigApplicationContext(A08_1.class);
 
