@@ -5,7 +5,10 @@ import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.springframework.aop.Advisor;
+import org.springframework.aop.aspectj.AspectInstanceFactory;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
+import org.springframework.aop.aspectj.AspectJMethodBeforeAdvice;
+import org.springframework.aop.aspectj.SingletonAspectInstanceFactory;
 import org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +18,8 @@ import org.springframework.context.annotation.ConfigurationClassPostProcessor;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.annotation.Order;
 
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -27,6 +32,8 @@ public class A17 {
         //注册切面类
         context.registerBean("Aspect1", Aspect1.class);
         context.registerBean("Config", Config.class);
+        //注册运行target.foo()需要用到的类
+        context.registerBean("Target1", Target1.class);
         //配置解析@bean注解的后处理器
         context.registerBean(ConfigurationClassPostProcessor.class);
         context.registerBean(CommonAnnotationBeanPostProcessor.class);
@@ -35,17 +42,44 @@ public class A17 {
 
         context.refresh();
 
+        //获取要用到的对象
+        Target1 target1 = (Target1) context.getBean("Target1");
+        target1.foo();
+
+
+        //查看高级切面如何转换为低级切面，以before为例
+        AspectInstanceFactory factory = new SingletonAspectInstanceFactory(new Aspect1());
+        //高级切面类转换为低级切面类
+        List<Advisor> list = new ArrayList<>();
+        for (Method method : Aspect1.class.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(Before.class)) {
+                //解析切点
+                String expression = method.getAnnotation(Before.class).value();
+                AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
+                pointcut.setExpression(expression);
+                //通知类
+                AspectJMethodBeforeAdvice advice = new AspectJMethodBeforeAdvice(method, pointcut, factory);
+                //切面
+                Advisor advisor = new DefaultPointcutAdvisor(pointcut, advice);
+                list.add(advisor);
+            }
+        }
+
+        for (Advisor advisor : list) {
+            System.out.println(advisor);
+        }
+
+
         /*
+
+        AnnotationAwareAspectJAutoProxyCreator中的主要功能:
+        1.将高级 @Aspect 切面统一为低级 Advisor 切面
+        2.在合适的时机创建代理
 
         实例创建--（代理扩展）依赖注入--初始化（代理扩展）  两个不同的时机进行扩展，二选一
         代理创建时机：
         1.初始化之后(无循环依赖)
         2.实例创建后，依赖注入之前(存在循环依赖)，并暂存于二级缓存
-
-
-        AnnotationAwareAspectJAutoProxyCreator中的主要功能:
-        1.将高级 @Aspect 切面统一为低级 Advisor 切面
-        2.在合适的时机创建代理
 
         有两个主要方法：
         第一个：findEligibleAdvisors 找到有资格的Advisor
