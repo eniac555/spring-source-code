@@ -50,9 +50,9 @@ public class A19 {
     }
 
     public static void main(String[] args) throws Throwable {
-
+        
         /*
-
+        
         GenericApplicationContext context = new GenericApplicationContext();
         context.registerBean(ConfigurationClassPostProcessor.class);
         context.registerBean(MyConfig.class);
@@ -81,16 +81,15 @@ public class A19 {
                 new Object[]{10}, Target.class, objectList) {};//方法受保护，{}创建他的子类
 
         invocation.proceed();
-
+        
         */
-
         
         /*
-
+        
         总结:
             有参数绑定的通知，在调用时依然需要切点，对参数进行匹配及绑定
             动态调用复杂程度高，性能比无参数绑定的低很多
-
+        
          */
 
     }
