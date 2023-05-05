@@ -26,34 +26,37 @@ public class TestBeanFactory {
                         .setScope("singleton").getBeanDefinition();
         beanFactory.registerBeanDefinition("config", beanDefinition);
 
-        // 给 BeanFactory 添加一些常用的后处理器，可以解析@Configuration，@Bean等这些注解
+        // 给 BeanFactory 添加一些常用的后处理器，把bean处理器添加到BeanFactory，能够解析@Configuration和@Bean
+        // 此时的后处理器只是存在于BeanFactory中的一个bean
         AnnotationConfigUtils.registerAnnotationConfigProcessors(beanFactory);
 
         // BeanFactory 后处理器主要功能，补充了一些 bean 定义
         beanFactory.getBeansOfType(BeanFactoryPostProcessor.class)//拿到所有的bean工厂后处理器
                 .values()
                 .forEach(beanFactoryPostProcessor -> {
-            beanFactoryPostProcessor.postProcessBeanFactory(beanFactory);
-        });
+                    beanFactoryPostProcessor.postProcessBeanFactory(beanFactory);
+                });
 
         // Bean 后处理器, 针对 bean 的生命周期的各个阶段提供扩展, 例如 @Autowired @Resource ...
+        // 此时是建立BeanFactory和后处理器之间的联系
         beanFactory.getBeansOfType(BeanPostProcessor.class)//拿到所有的bean后处理器
                 .values().stream()
                 .sorted(beanFactory.getDependencyComparator())
+                //.sorted(Objects.requireNonNull(beanFactory.getDependencyComparator()))
                 //加比较器，设置后处理器顺序，由此确定不同比较器之间的解析顺序
                 .forEach(beanPostProcessor -> {
-            System.out.println(">>>>" + beanPostProcessor);
-            beanFactory.addBeanPostProcessor(beanPostProcessor);
-        });
+                    System.out.println(">>>>" + beanPostProcessor);
+                    beanFactory.addBeanPostProcessor(beanPostProcessor);
+                });
 
         for (String name : beanFactory.getBeanDefinitionNames()) {
             System.out.println(name);
         }
 
-        beanFactory.preInstantiateSingletons(); // 准备好所有单例
+        beanFactory.preInstantiateSingletons(); // 准备好所有单例，不然就是用到时才会构造
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ");
         //System.out.println(beanFactory.getBean(Bean1.class).getBean2());
-        System.out.println(beanFactory.getBean(Bean1.class).getInter());
+        System.out.println("======" + beanFactory.getBean(Bean1.class).getInter());
 
         /*
 
